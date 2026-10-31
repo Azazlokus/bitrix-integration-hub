@@ -1,0 +1,19 @@
+includes:
+    - local/vendor/phpstan/phpstan-phpunit/extension.neon
+    - local/vendor/phpstan/phpstan-phpunit/rules.neon
+    - local/vendor/phpstan/phpstan-strict-rules/rules.neon
+
+parameters:
+    level: 8
+    phpVersion: 80400
+    tmpDir: .phpstan.cache
+    paths:
+        - local/modules
+        - local/php_interface
+        - tools
+        - tests
+        - mock-services
+    excludePaths:
+        - local/vendor
+        # Интеграционные тесты используют классы ядра — анализ со стабами Битрикса на этапе 17
+        - tests/Integration
