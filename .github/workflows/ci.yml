@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: "8.3"
+  COMPOSER_DIR: local
+
+jobs:
+  php:
+    name: PHP (lint, static analysis, unit tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Detect PHP project
+        id: detect
+        run: |
+          if [[ -f "$COMPOSER_DIR/composer.json" ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$COMPOSER_DIR/composer.json not found yet — PHP checks skipped (появится на этапе 1)"
+          fi
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        if: steps.detect.outputs.present == 'true'
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, intl, pdo_mysql, zip, xmlwriter, sockets
+          coverage: none
+          tools: composer:v2
+
+      - name: Get composer cache dir
+        if: steps.detect.outputs.present == 'true'
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.detect.outputs.present == 'true'
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('local/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Composer validate
+        if: steps.detect.outputs.present == 'true'
+        run: composer validate --strict --working-dir="$COMPOSER_DIR"
+
+      - name: Composer install
+        if: steps.detect.outputs.present == 'true'
+        run: composer install --no-interaction --no-progress --prefer-dist --working-dir="$COMPOSER_DIR"
+
+      - name: Composer audit
+        if: steps.detect.outputs.present == 'true'
+        run: composer audit --no-interaction --working-dir="$COMPOSER_DIR"
+
+      - name: PHP-CS-Fixer (dry run)
+        if: steps.detect.outputs.present == 'true' && hashFiles('.php-cs-fixer.dist.php') != ''
+        run: local/vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php
+
+      - name: PHPStan
+        if: steps.detect.outputs.present == 'true' && hashFiles('phpstan.neon*') != ''
+        run: local/vendor/bin/phpstan analyse --no-progress --error-format=github
+
+      - name: PHPUnit (unit suite)
+        if: steps.detect.outputs.present == 'true' && hashFiles('phpunit.xml*') != ''
+        run: local/vendor/bin/phpunit --testsuite Unit
+
+  workflows:
+    name: Workflows & scripts lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: actionlint
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/914e7df21a07ef503a81201c76d2b11c789d3fca/scripts/download-actionlint.bash) 1.7.12
+          ./actionlint -color
+
+      - name: zizmor (GitHub Actions security)
+        uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+        with:
+          advanced-security: false
+
+      - name: shellcheck
+        run: shellcheck tools/*.sh .githooks/* .claude/hooks/*.sh
