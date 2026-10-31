@@ -1,7 +1,6 @@
 version: 2
 
 # Экосистемы добавляются по мере появления манифестов (иначе Dependabot сыпет ошибками):
-#   этап 1  — composer (/local), docker (/docker/*), docker-compose (/)
 #   этап 15 — composer + npm (/apps/laravel-hub)
 updates:
   - package-ecosystem: github-actions
@@ -19,29 +18,29 @@ updates:
       include: scope
     labels: [dependencies, ci]
 
-  # - package-ecosystem: composer
-  #   directory: /local
-  #   schedule: { interval: weekly, day: monday }
-  #   cooldown: { default-days: 7 }
-  #   versioning-strategy: increase-if-necessary
-  #   groups:
-  #     dev-tools:
-  #       dependency-type: development
-  #     runtime-minor:
-  #       dependency-type: production
-  #       update-types: [minor, patch]
-  #   commit-message: { prefix: chore, prefix-development: chore, include: scope }
-  #   labels: [dependencies, php]
+  - package-ecosystem: composer
+    directory: /local
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    versioning-strategy: increase-if-necessary
+    groups:
+      dev-tools:
+        dependency-type: development
+      runtime-minor:
+        dependency-type: production
+        update-types: [minor, patch]
+    commit-message: { prefix: chore, prefix-development: chore, include: scope }
+    labels: [dependencies, php]
 
-  # - package-ecosystem: docker
-  #   directories: ["/docker/*"]
-  #   schedule: { interval: weekly, day: monday }
-  #   cooldown: { default-days: 7 }
-  #   commit-message: { prefix: build, include: scope }
-  #   labels: [dependencies, docker]
+  - package-ecosystem: docker
+    directories: ["/docker/*"]
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    commit-message: { prefix: build, include: scope }
+    labels: [dependencies, docker]
 
-  # - package-ecosystem: docker-compose
-  #   directory: /
-  #   schedule: { interval: weekly, day: monday }
-  #   commit-message: { prefix: build, include: scope }
-  #   labels: [dependencies, docker]
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    commit-message: { prefix: build, include: scope }
+    labels: [dependencies, docker]
