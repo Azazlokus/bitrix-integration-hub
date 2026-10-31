@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/../local/vendor/autoload.php';
 
+// init.php не должен подключать автозагрузку повторно (см. комментарий там)
+define('LAB_COMPOSER_AUTOLOADED', true);
+
 if (getenv('LAB_TESTS_BITRIX') !== '1') {
     return;
 }
@@ -25,6 +28,8 @@ if (!is_file($prolog)) {
 }
 
 $_SERVER['DOCUMENT_ROOT'] = $documentRoot;
+$_SERVER['HTTP_HOST'] ??= 'localhost';
+$_SERVER['SERVER_NAME'] ??= 'localhost';
 
 define('NO_KEEP_STATISTIC', true);
 define('NOT_CHECK_PERMISSIONS', true);
@@ -32,11 +37,12 @@ define('NO_AGENT_CHECK', true);
 define('NO_AGENT_STATISTIC', true);
 define('STOP_STATISTICS', true);
 define('BX_NO_ACCELERATOR_RESET', true);
+define('BX_SECURITY_SESSION_VIRTUAL', true); // CLI: сессия в памяти, не в Redis
 define('LAB_TESTS_BITRIX_LOADED', true);
 
 // PHPUnit подключает бутстрап внутри метода, а ядро рассчитывает на глобальную область видимости —
 // объявляем глобальными переменные, которые создают dbconn.php и prolog.
-global $DB, $DBType, $DBHost, $DBLogin, $DBPassword, $DBName, $DBDebug, $DBDebugToFile,
-$APPLICATION, $USER, $MESS, $USER_FIELD_MANAGER, $CACHE_MANAGER, $stackCacheManager;
+global $DB, $DBType, $DBSQLServerType, $DBHost, $DBLogin, $DBPassword, $DBName, $DBDebug, $DBDebugToFile,
+$APPLICATION, $USER, $MESS, $USER_FIELD_MANAGER, $CACHE_MANAGER, $stackCacheManager, $BX_STATE;
 
 require $prolog;
