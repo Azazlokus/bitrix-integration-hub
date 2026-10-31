@@ -26,15 +26,18 @@
 
 ## Команды
 
-Make-цели появляются по мере этапов (этап 1 создаёт основные). Сейчас:
-
 ```bash
-make hooks        # подключить git-хуки (.githooks): conventional commits, php -l, gitleaks
 make help         # список целей
+make up / down    # стек (создаёт .env из .env.example при первом запуске)
+make test         # все тесты с бутстрапом Битрикса (нужен запущенный стек и установленное ядро)
+make test-unit    # unit-тесты без Битрикса и без запущенного стека
+make lint / fix / stan   # PER-CS 3.0 / автофикс / PHPStan level 8
+make settings     # сгенерировать bitrix/.settings_extra.php (Redis)
+make composer c="require vendor/pkg"
 ```
 
-После этапа 1: `make up | down | shell | logs | test | migrate | worker | tunnel | demo`.
-Все PHP-команды выполняются **внутри контейнера** (`make shell` / `docker compose exec php ...`), а не на хосте (на хосте PHP 8.4 — другая версия, чем в контейнере).
+Все PHP-команды — **внутри контейнера** (Makefile это делает), не на хосте: версия PHP и расширения должны совпадать с образом.
+Пути в контейнере: репозиторий — `/app`, DOCUMENT_ROOT — `/app/www`, `local/` смонтирован в `/app/www/local`.
 
 ## Git и коммиты
 
@@ -55,6 +58,7 @@ make help         # список целей
 ## Структура (целевая)
 
 ```
+www/                             # DOCUMENT_ROOT: ядро (bitrix/, upload/) в .gitignore, публичные страницы — исключениями
 local/modules/lab.integration/   # модуль: lib/{Domain,Application,Infrastructure,Presentation}, install/, options.php
 local/php_interface/             # init.php, include/sale_payment/
 local/routes/api.php             # роутинг D7 для REST API
@@ -67,8 +71,8 @@ docs/                            # architecture.md, progress.md, adr/, openapi.y
 tools/                           # CLI-утилиты, генераторы, скрипты настройки
 ```
 
-## Открытые решения (обсудить на этапе 1)
+## Решения и открытые вопросы
 
-- Версия PHP: ТЗ требует 8.2+, но у PHP 8.2 активная поддержка закончилась, security-фиксы — до конца 2026. Предпочтительно 8.3/8.4 — проверить совместимость с актуальной версией БУС.
-- HTTP-клиент: `Bitrix\Main\Web\HttpClient` vs Guzzle (PSR-18) — ADR на этапе 2.
-- Механизм миграций: `sprint.migration` vs свой — ADR на этапе 1/3.
+- PHP 8.4, MySQL 8.4 LTS, раскладка вебрута — ADR 0002. Совместимость БУС с PHP 8.4 официально не подтверждена — при странных ошибках ядра сначала проверь `site_checker`.
+- Стиль кода — PER-CS 3.0 (преемник PSR-12).
+- Открыто: HTTP-клиент `Bitrix\Main\Web\HttpClient` vs Guzzle (PSR-18) — ADR на этапе 2; механизм миграций `sprint.migration` vs свой — ADR на этапе 3.
