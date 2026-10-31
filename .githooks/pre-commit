@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Локальные проверки перед коммитом. Пропустить в крайнем случае: git commit --no-verify (CI всё равно проверит).
+set -euo pipefail
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[[ -z "$staged" ]] && exit 0
+
+# 1. Запрещённые пути
+if bad=$(grep -E '^(www/)?(bitrix|upload)/|(^|/)\.env($|\.)|\.(pem|key|p12|pfx)$|(^|/)auth\.json$' <<<"$staged" | grep -v '\.env\.example$'); then
+  echo "✗ В коммит попали запрещённые файлы (ядро Битрикса / секреты):" >&2
+  echo "$bad" >&2
+  exit 1
+fi
+
+# 2. Синтаксис PHP
+if command -v php >/dev/null 2>&1; then
+  while IFS= read -r f; do
+    [[ "$f" == *.php ]] || continue
+    php -l "$f" >/dev/null || { echo "✗ Синтаксическая ошибка: $f" >&2; exit 1; }
+  done <<<"$staged"
+fi
+
+# 3. Секреты (если установлен gitleaks: https://github.com/gitleaks/gitleaks)
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --staged --no-banner --redact || { echo "✗ gitleaks нашёл секреты" >&2; exit 1; }
+else
+  echo "ℹ gitleaks не установлен — проверка секретов только в CI" >&2
+fi

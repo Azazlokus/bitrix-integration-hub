@@ -1,0 +1,49 @@
+# --- Ядро Битрикса и пользовательские файлы (никогда не коммитим) ---
+/bitrix/
+/upload/
+/www/bitrix/
+/www/upload/
+bitrixsetup.php
+/.htaccess.bak
+
+# --- Секреты ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+auth.json
+
+# --- Логи, кеш, артефакты ---
+/local/logs/
+*.log
+/var/
+/tmp/
+.phpunit.cache/
+.phpunit.result.cache
+.php-cs-fixer.cache
+.phpstan.cache/
+/build/
+/coverage/
+
+# --- Зависимости ---
+vendor/
+node_modules/
+
+# --- Laravel (этап 15) ---
+/apps/laravel-hub/storage/*.key
+/apps/laravel-hub/storage/logs/
+/apps/laravel-hub/bootstrap/cache/*.php
+
+# --- IDE / OS ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Claude Code: личные настройки ---
+.claude/settings.local.json
+CLAUDE.local.md

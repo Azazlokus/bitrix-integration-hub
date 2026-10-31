@@ -1,0 +1,17 @@
+* text=auto eol=lf
+
+*.php     text eol=lf diff=php
+*.sh      text eol=lf
+*.bat     text eol=crlf
+*.xml     text eol=lf
+*.csv     text eol=lf
+
+*.png     binary
+*.jpg     binary
+*.zip     binary
+
+# Не попадают в git archive
+/.github           export-ignore
+/.claude           export-ignore
+/tests             export-ignore
+/docs              export-ignore
