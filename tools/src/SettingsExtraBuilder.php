@@ -22,9 +22,9 @@ final class SettingsExtraBuilder
      */
     public function build(array $env): array
     {
-        $host = $this->require($env, 'REDIS_HOST');
-        $port = $this->port($this->require($env, 'REDIS_PORT'));
-        $sid = $this->require($env, 'BX_CACHE_SID');
+        $host = $this->required($env, 'REDIS_HOST');
+        $port = $this->port($this->required($env, 'REDIS_PORT'));
+        $sid = $this->required($env, 'BX_CACHE_SID');
 
         return [
             'cache' => [
@@ -70,7 +70,7 @@ final class SettingsExtraBuilder
     /**
      * @param array<string, string|false> $env
      */
-    private function require(array $env, string $name): string
+    private function required(array $env, string $name): string
     {
         $value = $env[$name] ?? false;
         if ($value === false || trim($value) === '') {

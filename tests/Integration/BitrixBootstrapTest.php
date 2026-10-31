@@ -39,25 +39,46 @@ final class BitrixBootstrapTest extends TestCase
         self::assertSame('\\Bitrix\\Main\\Data\\CacheEngineRedis', $cache['type']['class_name'] ?? null);
     }
 
+    /**
+     * Не считаем ключи (dbSize): в тот же Redis пишут сессии, а allkeys-lru может вытеснять ключи.
+     * Вместо этого смотрим, что запись и чтение кеша порождают команды записи и попадания в Redis.
+     */
     #[Test]
     public function cacheEntryLandsInRedis(): void
     {
         $redis = new Redis();
         $redis->connect((string) getenv('REDIS_HOST'), (int) getenv('REDIS_PORT'), 2.0);
-        $before = $redis->dbSize();
-
-        $cache = Cache::createInstance();
         $id = 'lab-bootstrap-test-' . bin2hex(random_bytes(6));
-        self::assertFalse($cache->initCache(60, $id, '/lab/tests'));
-        $cache->startDataCache();
-        $cache->endDataCache(['value' => $id]);
+        $dir = '/lab/tests';
 
-        self::assertGreaterThan($before, $redis->dbSize(), 'Кеш не попал в Redis');
+        try {
+            $writesBefore = $this->writeCommands($redis);
+            $cache = Cache::createInstance();
+            self::assertFalse($cache->initCache(60, $id, $dir));
+            $cache->startDataCache();
+            $cache->endDataCache(['value' => $id]);
+            self::assertGreaterThan($writesBefore, $this->writeCommands($redis), 'Запись кеша не дошла до Redis');
 
-        $reader = Cache::createInstance();
-        self::assertTrue($reader->initCache(60, $id, '/lab/tests'));
-        self::assertSame(['value' => $id], $reader->getVars());
+            $hitsBefore = (int) $redis->info('stats')['keyspace_hits'];
+            $reader = Cache::createInstance();
+            self::assertTrue($reader->initCache(60, $id, $dir));
+            self::assertSame(['value' => $id], $reader->getVars());
+            self::assertGreaterThan($hitsBefore, (int) $redis->info('stats')['keyspace_hits'], 'Чтение кеша не из Redis');
+        } finally {
+            Cache::createInstance()->clean($id, $dir);
+        }
+    }
 
-        $reader->clean($id, '/lab/tests');
+    private function writeCommands(Redis $redis): int
+    {
+        $total = 0;
+        foreach ($redis->info('commandstats') as $command => $stats) {
+            if (preg_match('/^cmdstat_(set|setex|psetex|hset|hmset|mset|sadd|expire)$/', (string) $command) === 1
+                && preg_match('/calls=(\d+)/', (string) $stats, $m) === 1) {
+                $total += (int) $m[1];
+            }
+        }
+
+        return $total;
     }
 }

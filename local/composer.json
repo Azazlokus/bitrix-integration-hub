@@ -4,7 +4,16 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": "^8.4"
+        "php": "^8.4",
+        "ext-intl": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-mysqli": "*",
+        "ext-pcntl": "*",
+        "ext-redis": "*",
+        "ext-sockets": "*",
+        "ext-xmlwriter": "*",
+        "ext-zip": "*"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.95",

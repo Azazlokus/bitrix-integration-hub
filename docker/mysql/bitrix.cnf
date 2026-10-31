@@ -13,6 +13,7 @@ innodb_flush_method = O_DIRECT
 max_allowed_packet = 64M
 table_open_cache = 4096
 max_connections = 200
+skip-name-resolve
 
 [client]
 default-character-set = utf8mb4

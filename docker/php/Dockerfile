@@ -29,6 +29,7 @@ RUN groupmod -o -g "${GID}" www-data \
  && mkdir -p /app/www/local /var/log/php \
  && chown -R www-data:www-data /app /var/log/php
 
+RUN cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 COPY php.ini /usr/local/etc/php/conf.d/zz-bitrix.ini
 COPY fpm-pool.conf /usr/local/etc/php-fpm.d/zz-pool.conf
 COPY msmtprc /etc/msmtprc

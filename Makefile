@@ -8,7 +8,7 @@ COMPOSER_DIR := /app/local
 BITRIXSETUP_URL := https://www.1c-bitrix.ru/download/scripts/bitrixsetup.php
 
 .PHONY: help hooks env up down restart build ps shell logs composer install lint fix stan test test-unit \
-        settings migrate worker tunnel demo bitrix-download mysql
+        settings migrate worker tunnel demo bitrix-download bitrix-cleanup mysql
 
 help: ## Показать список команд
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -20,10 +20,10 @@ hooks: ## Подключить git-хуки проекта (conventional commits
 
 env: ## Создать .env из .env.example (если ещё нет) с UID/GID текущего пользователя
 	@if [[ ! -f .env ]]; then \
-		sed -e "s/^UID=.*/UID=$$(id -u)/" -e "s/^GID=.*/GID=$$(id -g)/" .env.example > .env; \
+		sed -e "s/^UID=.*/UID=$$(id -u)/" -e "s/^GID=.*/GID=$$(id -g)/" .env.example > .env.tmp && mv .env.tmp .env && \
 		echo ".env создан — замени значения change-me"; \
 	fi
-	@mkdir -p www local/logs
+	@mkdir -p www/local local/logs
 
 # --- Окружение ---
 
@@ -49,36 +49,40 @@ logs: ## Логи (make logs s=php)
 	$(DC) logs -f --tail=200 $(s)
 
 mysql: ## Консоль MySQL под пользователем Битрикса
-	$(DC) exec mysql sh -c 'mysql -u"$$MYSQL_USER" -p"$$MYSQL_PASSWORD" "$$MYSQL_DATABASE"'
+	$(DC) exec mysql sh -c 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql -u"$$MYSQL_USER" "$$MYSQL_DATABASE"'
 
 # --- Код и качество ---
 
-composer: ## Composer (make composer c="require monolog/monolog")
+composer: env ## Composer (make composer c="require monolog/monolog")
 	$(PHP_RUN) composer --working-dir=$(COMPOSER_DIR) $(c)
 
-install: ## composer install
+install: env ## composer install
 	$(PHP_RUN) composer install --working-dir=$(COMPOSER_DIR) --no-interaction
 
-lint: ## Проверка стиля (PHP-CS-Fixer, dry run)
+lint: env ## Проверка стиля (PHP-CS-Fixer, dry run)
 	$(PHP_RUN) composer --working-dir=$(COMPOSER_DIR) lint
 
-fix: ## Автоисправление стиля
+fix: env ## Автоисправление стиля
 	$(PHP_RUN) composer --working-dir=$(COMPOSER_DIR) fix
 
-stan: ## Статический анализ (PHPStan)
+stan: env ## Статический анализ (PHPStan)
 	$(PHP_RUN) composer --working-dir=$(COMPOSER_DIR) stan
 
 test: ## Все тесты с бутстрапом Битрикса
 	$(PHP) env LAB_TESTS_BITRIX=1 local/vendor/bin/phpunit $(args)
 
-test-unit: ## Только unit-тесты (без Битрикса и без запущенного окружения)
+test-unit: env ## Только unit-тесты (без Битрикса и без запущенного окружения)
 	$(PHP_RUN) local/vendor/bin/phpunit --testsuite Unit $(args)
 
 # --- Битрикс ---
 
 bitrix-download: env ## Скачать bitrixsetup.php в ./www (дальше — мастер установки в браузере)
-	curl -fSL -o www/bitrixsetup.php $(BITRIXSETUP_URL)
-	@echo "Открой http://127.0.0.1:$${HTTP_PORT:-8080}/bitrixsetup.php"
+	curl -fSL --proto '=https' --proto-redir '=https' --tlsv1.2 -o www/bitrixsetup.php $(BITRIXSETUP_URL)
+	@sha256sum www/bitrixsetup.php
+	@echo "Открой http://127.0.0.1:$${HTTP_PORT:-8080}/bitrixsetup.php — после установки удали www/bitrixsetup.php (make bitrix-cleanup)"
+
+bitrix-cleanup: ## Удалить установщик и скрипт восстановления из вебрута
+	rm -f www/bitrixsetup.php www/restore.php
 
 settings: ## Сгенерировать bitrix/.settings_extra.php (кеш и сессии в Redis)
 	$(PHP) php tools/generate-settings-extra.php
@@ -95,7 +99,7 @@ worker: ## Запустить консьюмеры очередей (конте�
 	$(DC) --profile worker up -d worker
 	$(DC) logs -f worker
 
-tunnel: ## Публичный https-туннель к сайту (cloudflared quick tunnel) для вебхуков Б24
+tunnel: ## Публичный https-туннель для входящих вебхуков (только allowlist путей, см. docker/nginx/webhooks.conf)
 	$(DC) --profile tunnel up -d tunnel
 	@echo "Ждём URL туннеля..."; \
 	for i in $$(seq 1 30); do \
