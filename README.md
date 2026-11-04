@@ -12,11 +12,12 @@ Docker 25+ с Compose v2, GNU Make, Linux/WSL2 (репозиторий — в ф
 
 ```bash
 make hooks      # git-хуки: Conventional Commits, php -l, gitleaks
-make up         # создаст .env из .env.example, соберёт образы, поднимет стек
+make env        # создаст .env из .env.example — замени в нём все change-me
+make up         # соберёт образы и поднимет стек
 make install    # composer install (dev-инструменты, автозагрузка)
 ```
 
-Перед первым `make up` замени в `.env` все `change-me`.
+Заменить пароли нужно **до первого** `make up`: MySQL и RabbitMQ запоминают их при инициализации томов.
 
 ### Установка Битрикса (вручную, один раз)
 
