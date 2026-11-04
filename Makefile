@@ -29,7 +29,8 @@ env: ## Создать .env из .env.example (если ещё нет) с UID/GI
 
 up: env ## Поднять все сервисы
 	$(DC) up -d --build --wait
-	@echo "Сайт: http://127.0.0.1:$${HTTP_PORT:-8080}  Mailpit: :8025  RabbitMQ: :15672  Meilisearch: :7700"
+	@port() { grep -E "^$$1=" .env | cut -d= -f2; }; \
+	echo "Сайт: http://127.0.0.1:$$(port HTTP_PORT)  Mailpit: :$$(port MAILPIT_UI_PORT)  RabbitMQ: :$$(port RABBITMQ_UI_PORT)  Meilisearch: :$$(port MEILI_PORT)"
 
 down: ## Остановить сервисы (данные сохраняются)
 	$(DC) --profile '*' down
@@ -79,7 +80,7 @@ test-unit: env ## Только unit-тесты (без Битрикса и бе�
 bitrix-download: env ## Скачать bitrixsetup.php в ./www (дальше — мастер установки в браузере)
 	curl -fSL --proto '=https' --proto-redir '=https' --tlsv1.2 -o www/bitrixsetup.php $(BITRIXSETUP_URL)
 	@sha256sum www/bitrixsetup.php
-	@echo "Открой http://127.0.0.1:$${HTTP_PORT:-8080}/bitrixsetup.php — после установки удали www/bitrixsetup.php (make bitrix-cleanup)"
+	@echo "Открой http://127.0.0.1:$$(grep -E '^HTTP_PORT=' .env | cut -d= -f2)/bitrixsetup.php — после установки удали www/bitrixsetup.php (make bitrix-cleanup)"
 
 bitrix-cleanup: ## Удалить установщик и скрипт восстановления из вебрута
 	rm -f www/bitrixsetup.php www/restore.php
