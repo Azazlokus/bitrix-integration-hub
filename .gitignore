@@ -1,9 +1,9 @@
 # --- Ядро Битрикса и пользовательские файлы (никогда не коммитим) ---
 /bitrix/
 /upload/
-/www/bitrix/
-/www/upload/
-bitrixsetup.php
+# DOCUMENT_ROOT: ядро и файлы мастера установки не коммитим; публичные страницы добавляются исключениями (этап 3)
+/www/*
+!/www/.gitkeep
 /.htaccess.bak
 
 # --- Секреты ---
@@ -47,3 +47,4 @@ Thumbs.db
 # --- Claude Code: личные настройки ---
 .claude/settings.local.json
 CLAUDE.local.md
+.claude/scheduled_tasks.lock

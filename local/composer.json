@@ -1,0 +1,52 @@
+{
+    "name": "lab/bitrix-integration-hub",
+    "description": "Bitrix Integration Lab — учебный интернет-магазин на 1С-Битрикс с типовыми интеграциями",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "ext-intl": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-mysqli": "*",
+        "ext-pcntl": "*",
+        "ext-redis": "*",
+        "ext-sockets": "*",
+        "ext-xmlwriter": "*",
+        "ext-zip": "*"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.3",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lab\\Integration\\": "modules/lab.integration/lib/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Lab\\Tools\\": "../tools/src/",
+            "Lab\\Integration\\Tests\\": "../tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.4.27"
+        },
+        "audit": {
+            "abandoned": "fail"
+        }
+    },
+    "scripts": {
+        "lint": "php-cs-fixer fix --dry-run --diff --config=../.php-cs-fixer.dist.php",
+        "fix": "php-cs-fixer fix --config=../.php-cs-fixer.dist.php",
+        "stan": "phpstan analyse --configuration=../phpstan.neon",
+        "test": "phpunit --configuration=../phpunit.xml"
+    }
+}

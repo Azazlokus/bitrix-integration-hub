@@ -1,7 +1,6 @@
 version: 2
 
 # Экосистемы добавляются по мере появления манифестов (иначе Dependabot сыпет ошибками):
-#   этап 1  — composer (/local), docker (/docker/*), docker-compose (/)
 #   этап 15 — composer + npm (/apps/laravel-hub)
 updates:
   - package-ecosystem: github-actions
@@ -19,29 +18,41 @@ updates:
       include: scope
     labels: [dependencies, ci]
 
-  # - package-ecosystem: composer
-  #   directory: /local
-  #   schedule: { interval: weekly, day: monday }
-  #   cooldown: { default-days: 7 }
-  #   versioning-strategy: increase-if-necessary
-  #   groups:
-  #     dev-tools:
-  #       dependency-type: development
-  #     runtime-minor:
-  #       dependency-type: production
-  #       update-types: [minor, patch]
-  #   commit-message: { prefix: chore, prefix-development: chore, include: scope }
-  #   labels: [dependencies, php]
+  - package-ecosystem: composer
+    directory: /local
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    versioning-strategy: increase-if-necessary
+    groups:
+      dev-tools:
+        dependency-type: development
+      runtime-minor:
+        dependency-type: production
+        update-types: [minor, patch]
+    commit-message: { prefix: chore, prefix-development: chore, include: scope }
+    labels: [dependencies, php]
 
-  # - package-ecosystem: docker
-  #   directories: ["/docker/*"]
-  #   schedule: { interval: weekly, day: monday }
-  #   cooldown: { default-days: 7 }
-  #   commit-message: { prefix: build, include: scope }
-  #   labels: [dependencies, docker]
+  - package-ecosystem: docker
+    directories: ["/docker/*"]
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    ignore:
+      # PHP 8.4 — решение проекта (ADR 0002); переход на 8.5 — осознанно, через /check-updates
+      - dependency-name: php
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+    commit-message: { prefix: build, include: scope }
+    labels: [dependencies, docker]
 
-  # - package-ecosystem: docker-compose
-  #   directory: /
-  #   schedule: { interval: weekly, day: monday }
-  #   commit-message: { prefix: build, include: scope }
-  #   labels: [dependencies, docker]
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    ignore:
+      # MySQL: остаёмся на LTS 8.4 (9.x/26.x — innovation-релизы, Битрикс их не заявляет)
+      - dependency-name: mysql
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # nginx: только stable-ветка 1.30.x; нечётные минорные (1.31) — mainline
+      - dependency-name: nginx
+        update-types: ["version-update:semver-minor"]
+    commit-message: { prefix: build, include: scope }
+    labels: [dependencies, docker]
