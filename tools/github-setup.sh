@@ -37,6 +37,16 @@ echo "→ Actions: разрешены только закреплённые по
 api -X PUT "repos/$REPO/actions/permissions" -F enabled=true -f allowed_actions=all -F sha_pinning_required=true >/dev/null \
   || echo "  ⚠ sha_pinning_required не поддерживается API — пропущено"
 
+echo "→ Метки для Dependabot и PR"
+while IFS=: read -r name color desc; do
+  gh label create "$name" --repo "$REPO" --color "$color" --description "$desc" --force >/dev/null
+done <<'LABELS'
+dependencies:0366d6:Обновление зависимостей
+ci:5319e7:GitHub Actions и CI
+php:4f5d95:Composer-зависимости
+docker:1d63ed:Docker-образы
+LABELS
+
 echo "→ Ruleset для main"
 ruleset_id=$(api "repos/$REPO/rulesets" --jq '.[] | select(.name=="main-protection") | .id' || true)
 method=POST; path="repos/$REPO/rulesets"
