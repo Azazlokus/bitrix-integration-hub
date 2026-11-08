@@ -182,7 +182,7 @@ services:
     restart: unless-stopped
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.8.1
+    image: quay.io/keycloak/keycloak:26.8.2
     profiles: [sso]
     networks: [app]
     command: ["start-dev", "--http-port=8080"]
