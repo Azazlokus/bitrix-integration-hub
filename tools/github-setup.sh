@@ -66,6 +66,8 @@ api -X "$method" "$path" --input - >/dev/null <<'JSON'
       "required_status_checks": [
         {"context": "PHP (lint, static analysis, unit tests)"},
         {"context": "Workflows & scripts lint"},
+        {"context": "Dockerfile lint (hadolint)"},
+        {"context": "docker compose config"},
         {"context": "Secrets (gitleaks)"},
         {"context": "Dependencies, IaC & secrets (Trivy)"},
         {"context": "PR title"},
