@@ -5,7 +5,7 @@
 set -euo pipefail
 
 TYPES='feat|fix|refactor|perf|test|docs|build|ci|chore|revert|style'
-SCOPES='infra|module|catalog|1c|api|b24|payment|delivery|queue|erp|search|feeds|notify|sso|laravel|observability|tests|ci|docs|deps|adr|claude|security|release'
+SCOPES='infra|module|core|contracts|catalog|1c|queue|webhooks|sync|api|b24|payment|delivery|erp|batch|search|feeds|notify|sso|laravel|observability|tests|ci|docs|deps|adr|claude|security|release'
 MAX_LEN=72
 
 if [[ "${1:-}" == "--subject" ]]; then
