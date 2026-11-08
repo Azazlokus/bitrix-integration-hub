@@ -1,8 +1,18 @@
-# Bitrix Integration Lab
+# Bitrix Integration Lab — «ПрофСпорт»
 
-Учебный интернет-магазин на 1С-Битрикс (БУС), в котором собраны типовые интеграции коммерческой разработки: 1С (CommerceML), Битрикс24 (вебхуки, OAuth-приложение, встройки, роботы), своя платёжка и доставка, RabbitMQ + Transactional Outbox, внешняя ERP, Meilisearch, фиды, SMS/Telegram, SSO (Keycloak), мост с Laravel.
+У дистрибьютора спортивной экипировки «ПрофСпорт» есть свой бэкенд на **Laravel 13** (PIM, цены, остатки, OMS, B2B-кабинет), и к нему подключается интернет-магазин на **1С-Битрикс**. На этой паре показан каждый типовой вид интеграции:
+- обмен CommerceML;
+- очередь с Transactional Outbox;
+- подписанные вебхуки;
+- REST pull и синхронные вызовы с фолбэком;
+- REST API сайта;
+- пакетная сверка файлами;
+- общий поисковый индекс;
+- SSO.
 
-> 🚧 В разработке. Статус этапов — [docs/progress.md](docs/progress.md). ТЗ — [bitrix-integration-lab-SPEC.md](bitrix-integration-lab-SPEC.md).
+Плюс сторонние сервисы: эквайринг, доставка, SMS, маркетплейс, Битрикс24.
+
+> 🚧 В разработке. План — [docs/roadmap.md](docs/roadmap.md), статус — [docs/progress.md](docs/progress.md), исходное ТЗ — [bitrix-integration-lab-SPEC.md](bitrix-integration-lab-SPEC.md).
 
 ## Требования
 
